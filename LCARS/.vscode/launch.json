@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+
+    {
+      "type": "java",
+      "name": "Run LcarsApp",
+      "request": "launch",
+      "mainClass": "LcarsApp",
+      "vmArgs": "--module-path \"C:/Users/pawar/javafx/javafx-sdk-25.0.1/lib\" --add-modules javafx.controls,javafx.graphics,javafx.media"
+
+    }
+  ]
+}
