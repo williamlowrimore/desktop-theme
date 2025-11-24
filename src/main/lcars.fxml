@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Point3D?>
+<?import javafx.scene.Group?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.shape.Rectangle?>
+<?import javafx.scene.shape.SVGPath?>
+
+<AnchorPane style="-fx-background-color: 1111111;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#cd9ecf" height="25.0" stroke="#cd9ecf" strokeType="INSIDE" width="408.0" AnchorPane.bottomAnchor="533.0" AnchorPane.leftAnchor="802.0" AnchorPane.rightAnchor="61.0" AnchorPane.topAnchor="171.0" />
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#cd9ecf" height="25.0" stroke="#cd9ecf" strokeType="INSIDE" width="408.0" AnchorPane.bottomAnchor="564.0" AnchorPane.leftAnchor="802.0" AnchorPane.rightAnchor="61.0" AnchorPane.topAnchor="140.0" />
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#cd666c" height="25.0" stroke="#cd666c" strokeType="INSIDE" width="52.0" AnchorPane.bottomAnchor="564.0" AnchorPane.leftAnchor="1216.0" AnchorPane.rightAnchor="3.0" AnchorPane.topAnchor="140.0" />
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#cd9ecf" height="25.0" stroke="#cd9ecf" strokeType="INSIDE" width="200.0" AnchorPane.bottomAnchor="564.0" AnchorPane.leftAnchor="593.0" AnchorPane.rightAnchor="478.0" AnchorPane.topAnchor="140.0" />
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#cd666c" height="25.0" layoutX="1216.0" layoutY="171.0" stroke="#cd666c" strokeType="INSIDE" width="52.0" AnchorPane.bottomAnchor="533.0" AnchorPane.leftAnchor="1216.0" AnchorPane.rightAnchor="3.0" AnchorPane.topAnchor="171.0" />
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#cd9ecf" height="25.0" stroke="#cd9ecf" strokeType="INSIDE" width="200.0" AnchorPane.bottomAnchor="533.0" AnchorPane.leftAnchor="593.0" AnchorPane.rightAnchor="478.0" AnchorPane.topAnchor="171.0" />
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#f89d00" height="25.0" stroke="#f89d00" strokeType="INSIDE" width="32.0" AnchorPane.bottomAnchor="564.0" AnchorPane.leftAnchor="554.0" AnchorPane.rightAnchor="685.0" AnchorPane.topAnchor="140.0" />
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#f89d00" height="25.0" layoutX="554.0" layoutY="171.0" stroke="#f89d00" strokeType="INSIDE" width="32.0" />
+      <Group layoutX="-0.41053420305252075" layoutY="65.0">
+         <children>
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#a0a0ff" height="25.0" layoutX="195.82107192277908" layoutY="75.0" stroke="#a0a0ff" strokeType="INSIDE" width="350.0" />
+            <SVGPath content="m0,0h200v100a300,100,0,0,1,-200,-99" fill="#a0a0ff" />
+            <SVGPath content="m0,0h200v100a300,100,0,0,0,-200,-99" fill="#a0a0ff" layoutX="129.0" layoutY="10.0" rotate="180.0" scaleX="0.3" scaleY="0.3" scaleZ="0.2" />
+         </children>
+      </Group>
+      <AnchorPane layoutY="157.0" rotate="180.0">
+         <children>
+            <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#a0a0ff" height="25.0" layoutX="195.41053420305252" layoutY="75.0" stroke="#a0a0ff" strokeType="INSIDE" width="350.0" />
+            <SVGPath content="m0,0h200v100a300,100,0,0,1,-200,-99" fill="#a0a0ff" />
+            <SVGPath content="m0,0h200v100a300,100,0,0,0,-200,-99" fill="#a0a0ff" layoutX="129.0" layoutY="15.0" rotate="180.0" scaleX="0.3" scaleY="0.3" scaleZ="0.2" />
+         </children>
+         <rotationAxis>
+            <Point3D x="180.0" z="1.0" />
+         </rotationAxis>
+      </AnchorPane>
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#a0a0ff" height="202.0" layoutY="276.0" stroke="#a0a0ff" strokeType="INSIDE" width="200.0" />
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#f89d00" height="61.0" layoutY="484.0" stroke="#f89d00" strokeType="INSIDE" width="200.0" />
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#f79f5f" height="176.0" layoutY="551.0" stroke="#f79f5f" strokeType="INSIDE" width="200.0" />
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#cb9fd1" height="61.0" stroke="#cb9fd1" strokeType="INSIDE" width="200.0" />
+      <Label layoutX="239.0" layoutY="14.0" prefHeight="115.0" prefWidth="375.0" />
+      <Pane layoutX="216.0" layoutY="205.0" prefHeight="524.0" prefWidth="1055.0" />
+   </children>
+</AnchorPane>

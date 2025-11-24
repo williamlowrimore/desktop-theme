@@ -1,0 +1,103 @@
+/* LCARS Interface Theme for JavaFX
+   -------------------------------- */
+
+.root {
+    -fx-background-color: #000000;
+    -fx-font-family: "Arial";
+    -fx-text-fill: #d6b7ff;
+}
+
+/* ===== LCARS Colors ===== */
+.lcars-orange { -fx-background-color: #e6984d; }
+.lcars-light-orange { -fx-background-color: #f2aa65; }
+.lcars-pink { -fx-background-color: #d97ca8; }
+.lcars-purple { -fx-background-color: #b185f2; }
+.lcars-dark { -fx-background-color: #2b202b; }
+
+/* ===== Panels and Bars ===== */
+.lcars-bar-horizontal {
+    -fx-background-color: #e6984d;
+    -fx-pref-height: 28;
+}
+
+.lcars-bar-vertical {
+    -fx-background-color: #b185f2;
+    -fx-pref-width: 20;
+}
+
+.lcars-console {
+    -fx-background-color: linear-gradient(to bottom, #0a0a0a, #111122);
+    -fx-border-color: #e6984d;
+    -fx-border-width: 3;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-padding: 16;
+}
+
+.lcars-grid {
+    -fx-background-color:
+        linear-gradient(to right, transparent 98%, rgba(255,165,0,0.2) 99%),
+        linear-gradient(to bottom, transparent 98%, rgba(255,165,0,0.2) 99%);
+    -fx-background-size: 10% 10%;
+}
+
+/* ===== Buttons ===== */
+.button {
+    -fx-background-radius: 16;
+    -fx-padding: 10 20;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-border-color: transparent;
+    -fx-text-fill: #000000;
+}
+
+.button:hover { -fx-opacity: 0.85; }
+.button:pressed { -fx-background-color: #ffdd88; }
+
+.lcars-btn-orange { -fx-background-color: #e6984d; }
+.lcars-btn-purple { -fx-background-color: #b185f2; }
+.lcars-btn-pink   { -fx-background-color: #d97ca8; }
+.lcars-btn-dark   { -fx-background-color: #2b202b; -fx-text-fill: #eecfff; }
+
+/* ===== Text and Labels ===== */
+.label {
+    -fx-text-fill: #b185f2;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+}
+
+.lcars-title {
+    -fx-text-fill: #b185f2;
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 16 6 16;
+}
+
+/* ===== Optional Corner Shapes ===== */
+.lcars-corner-tl {
+    -fx-shape: "M0,100 A100,100 0 0 1 100,0 L100,100 Z";
+    -fx-background-color: #e6984d;
+    -fx-pref-width: 100;
+    -fx-pref-height: 100;
+}
+
+.lcars-corner-tr {
+    -fx-shape: "M0,0 A100,100 0 0 1 100,100 L0,100 Z";
+    -fx-background-color: #b185f2;
+    -fx-pref-width: 100;
+    -fx-pref-height: 100;
+}
+
+.lcars-corner-bl {
+    -fx-shape: "M100,0 A100,100 0 0 1 0,100 L100,100 Z";
+    -fx-background-color: #d97ca8;
+    -fx-pref-width: 100;
+    -fx-pref-height: 100;
+}
+
+.lcars-corner-br {
+    -fx-shape: "M0,0 A100,100 0 0 1 100,100 L0,0 Z";
+    -fx-background-color: #f2aa65;
+    -fx-pref-width: 100;
+    -fx-pref-height: 100;
+}
