@@ -4,8 +4,8 @@
 // - Desktop tiles persist via ~/.lcars_desktop.txt
 // - UPDATE: Top-right HOLO DRIVE w/ bigger red hub + compact storage bar
 // - UPDATE: Username appears on the amber header bar in a small right-side pill
-package main;
 
+package main;
 
 import javafx.animation.*;
 import javafx.application.Application;
@@ -74,6 +74,12 @@ public class LcarsApp extends Application {
 	private ImageView headerLogo;
 	private static DesktopCanvas DESKTOP_CANVAS;
 
+	// host layout pieces so we can swap the right-hand desktop pane with the explorer
+	private BorderPane mainBody;
+	private Node desktopContent;
+	private Parent explorerContent;
+	private ExplorerView explorerView;
+
 	// ===== Font helper (optional LCARS font) =====
 	private static Font lcarsFontOrDefault(double size, boolean bold) {
 		try (FileInputStream in = new FileInputStream("lcars.ttf")) {
@@ -96,7 +102,7 @@ public class LcarsApp extends Application {
 
 		Scene scene = new Scene(root, 1280, 800, BG);
 		//will add the fxml file over the current scene
-		/*try {
+		try {
 		        FXMLLoader loader = new FXMLLoader(LcarsApp.class.getResource("lcars.fxml"));
 		        Parent rooter = loader.load();
 		        scene = new Scene(rooter);
@@ -105,11 +111,13 @@ public class LcarsApp extends Application {
 		    } catch (IOException e) {
 		        e.printStackTrace();
 		        System.out.println("Failed to load FXML file!");
-		    }*/
+		    }
 		primary.setTitle("LCARS File Console");
 		primary.setScene(scene);
 		primary.setFullScreen(true);
 		primary.show();
+		
+		
 		
 		//adds the on click sound
 		 AudioClip click = new AudioClip(getClass().getResource("clicky.mp3").toExternalForm());
@@ -175,6 +183,8 @@ public class LcarsApp extends Application {
 		BorderPane body = new BorderPane();
 		body.setLeft(controlsCard);
 		body.setCenter(desktopStack);
+		this.mainBody = body;
+		this.desktopContent = desktopStack;
 		root.setCenter(body);
 
 		Button cmdButton = lcarsButton("Command Prompt", SALMON);
@@ -185,7 +195,7 @@ public class LcarsApp extends Application {
 		grid.add(cmdButton, 0, 0); grid.add(b2, 1, 0);
 		grid.add(btnExplorer, 0, 1); grid.add(b4, 1, 1);
 
-		btnExplorer.setOnAction(e -> openExplorerWindow(owner));
+		btnExplorer.setOnAction(e -> openExplorerPane());
 		cmdButton.setOnAction(e -> openCMDPane());
 
 		return root;
@@ -194,6 +204,50 @@ public class LcarsApp extends Application {
 	private Object openCMDPane() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	// Replace only the right-hand desktop area with the explorer view
+	private void openExplorerPane() {
+		// Replace only the right-hand desktop area with the explorer view
+		File start;
+		boolean isWin = System.getProperty("os.name").toLowerCase().contains("win");
+		if (isWin && new File("C\\").exists()) {
+			start = new File("C\\");
+		} else {
+			File[] roots = File.listRoots();
+			start = (roots != null && roots.length > 0) ? roots[0] : new File("/");
+		}
+
+		ExplorerView view = buildExplorerView(start, this::showDesktopPane);
+		this.explorerView = view;
+		this.explorerContent = view.root;
+
+		if (this.mainBody != null && this.explorerContent != null) {
+			this.mainBody.setCenter(this.explorerContent);
+		}
+
+		Scene scene = (this.mainBody != null) ? this.mainBody.getScene() : null;
+		if (scene != null) {
+			view.registerShortcuts(scene);
+			Window w = scene.getWindow();
+			if (w instanceof Stage s) {
+				s.setTitle("LCARS Explorer — TNG");
+			}
+		}
+	}
+
+	// Restore the desktop canvas + holo drive on the right side
+	private void showDesktopPane() {
+		if (this.mainBody != null && this.desktopContent != null) {
+			this.mainBody.setCenter(this.desktopContent);
+		}
+		Scene scene = (this.mainBody != null) ? this.mainBody.getScene() : null;
+		if (scene != null) {
+			Window w = scene.getWindow();
+			if (w instanceof Stage s) {
+				s.setTitle("LCARS File Console");
+			}
+		}
 	}
 
 	// === HEADER: small username box sitting ON the amber bar at the right end ===
@@ -388,34 +442,8 @@ public class LcarsApp extends Application {
 		return (roots != null && roots.length > 0) ? roots[0] : null;
 	}
 
-	// ===== Explorer (unchanged except for context) =====
-	private void openExplorerWindow(Window owner) {
-		File start;
-		boolean isWin = System.getProperty("os.name").toLowerCase().contains("win");
-		if (isWin && new File("C:\\").exists()) start = new File("C:\\");
-		else {
-			File[] roots = File.listRoots();
-			start = (roots != null && roots.length > 0) ? roots[0] : new File("/");
-		}
-
-		Stage stage = new Stage(StageStyle.DECORATED);
-		stage.setTitle("LCARS Explorer — TNG");
-		stage.initOwner(owner);
-		stage.setFullScreen(true);
-
-		ExplorerView view = buildExplorerView(start, stage);
-
-		StackPane wrap = new StackPane(view.root);
-		attachConnectivityMonitor(wrap);
-
-		Scene scene = new Scene(wrap, 1400, 900, BG);
-		stage.setScene(scene);
-		stage.show();
-
-		view.registerShortcuts(scene);
-	}
-
-	private ExplorerView buildExplorerView(File startDir, Stage stage) {
+	// ===== Explorer (same UI, used inside right-hand pane) =====
+	private ExplorerView buildExplorerView(File startDir, Runnable onClose) {
 		VBox bars = new VBox(6, lcarsBar(SALMON, 34), lcarsBar(AMBER, 20), lcarsBar(BLUE, 12));
 
 		Button btnBack = lcarsButton("BACK", SALMON);
@@ -425,7 +453,7 @@ public class LcarsApp extends Application {
 		Button btnRef  = lcarsButton("REFRESH", PEACH);
 
 		Button btnClose = lcarsButton("CLOSE", SALMON);
-		btnClose.setOnAction(e -> stage.close());
+		btnClose.setOnAction(e -> onClose.run());
 
 		Button btnCreate = lcarsButton("CREATE FILE", PEACH);
 		Button btnDelete = lcarsButton("DELETE SELECTED", SALMON);

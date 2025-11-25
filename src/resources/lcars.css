@@ -14,6 +14,13 @@
 .lcars-purple { -fx-background-color: #b185f2; }
 .lcars-dark { -fx-background-color: #2b202b; }
 
+#topleftlabel {
+    -fx-text-fill: #ffb7f9;
+    -fx-font-family: "Eurostile";
+    -fx-font-size: 48px;
+    -fx-font-weight: bold;
+}
+
 /* ===== Panels and Bars ===== */
 .lcars-bar-horizontal {
     -fx-background-color: #e6984d;
