@@ -1,0 +1,94 @@
+using System;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Collections.Generic;
+using NAudio.CoreAudioApi;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        if (args.Length == 0)
+        {
+            Console.WriteLine("Usage:");
+            Console.WriteLine("  LcarsAudioHelper.exe set-volume <0-100>");
+            Console.WriteLine("  LcarsAudioHelper.exe mute");
+            Console.WriteLine("  LcarsAudioHelper.exe unmute");
+            Console.WriteLine("  LcarsAudioHelper.exe toggle-mute");
+            Console.WriteLine("  LcarsAudioHelper.exe set-device <partialName>");
+            return;
+        }
+
+        try
+        {
+            string cmd = args[0].ToLower();
+
+            if (cmd == "set-volume")
+            {
+                int vol = int.Parse(args[1]);
+                SetMasterVolume(vol);
+            }
+            else if (cmd == "mute")
+            {
+                SetMute(true);
+            }
+            else if (cmd == "unmute")
+            {
+                SetMute(false);
+            }
+            else if (cmd == "toggle-mute")
+            {
+                ToggleMute();
+            }
+            else if (cmd == "set-device")
+            {
+                string name = string.Join(" ", args.Skip(1)).Trim();
+                SetDefaultDevice(name);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("ERR: " + ex.Message);
+        }
+    }
+
+    static void SetMasterVolume(int percent)
+    {
+        var device = GetDefaultDevice();
+        if (device == null) return;
+
+        float vol = Math.Max(0, Math.Min(100, percent)) / 100f;
+        device.AudioEndpointVolume.MasterVolumeLevelScalar = vol;
+    }
+
+    static void SetMute(bool mute)
+    {
+        var device = GetDefaultDevice();
+        if (device == null) return;
+
+        device.AudioEndpointVolume.Mute = mute;
+    }
+
+    static void ToggleMute()
+    {
+        var device = GetDefaultDevice();
+        if (device == null) return;
+
+        device.AudioEndpointVolume.Mute = !device.AudioEndpointVolume.Mute;
+    }
+
+    static MMDevice GetDefaultDevice()
+    {
+        MMDeviceEnumerator devEnum = new MMDeviceEnumerator();
+        return devEnum.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
+    }
+
+    static void SetDefaultDevice(string namePart)
+    {
+        // Requires Windows 10 Shell command workaround
+        // Opens the settings panel to the correct location
+        System.Diagnostics.Process.Start(
+            $"ms-settings:sound"
+        );
+    }
+}
