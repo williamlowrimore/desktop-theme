@@ -31,6 +31,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.text.SimpleDateFormat;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -116,24 +118,29 @@ import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import javafx.util.Duration;
 
+
 public class LcarsApp extends Application {
 
     // ===== LCARS palette (Classic TNG) =====
-    public static final Color BG = Color.web("#000000");
-    public static final Color TEXT = Color.web("#F0F0F0");
-    public static final Color PEACH = Color.web("#FFB266");
-    public static final Color SALMON = Color.web("#FF8C78");
-    public static final Color AMBER = Color.web("#FFCC66");
-    public static final Color BLUE = Color.web("#6699FF");
-    public static final Color TEAL = Color.web("#60C8C8");
-    public static final Color PANEL = Color.web("#0D0D0D");
-    public static final Color EDGE = Color.web("#333333");
+	public static Color BG     = Color.web("#000000");
+	public static  Color TEXT   = Color.web("#F0F0F0");
+	public static  Color PEACH  = Color.web("#FFB266");
+	public static Color LAVENDER = Color.web("#D3D3FF");
+	public static  Color SALMON = Color.web("#FF8C78");
+	public static  Color AMBER  = Color.web("#FFCC66");
+	public static  Color ORANGE = Color.web("#f89d00");
+	public static  Color BLUE   = Color.web("#6699FF");
+	public static Color RED = Color.web("#cd666c");
+	public static  Color TEAL   = Color.web("#60C8C8");
+	public static  Color PANEL  = Color.web("#0D0D0D");
+	public static  Color EDGE   = Color.web("#333333");
     private int lastVolumeSteps = 25;  // remember last applied system volume (0–50 scale)
 
     // Desktop tiles / trash sizing
     private static final double ICON_SIZE = 80; // exact square size
     private static final double ICON_RADIUS = 20;
-
+    private Timeline clock;
+    private BorderPane mainBody;
     private static class Settings {
         boolean ambientSound = true;
         boolean glowEnabled = true;
@@ -141,6 +148,7 @@ public class LcarsApp extends Application {
         double uiScale = 1.0;
         boolean transparentUI = false;
         boolean clickSound = true;
+        String theme = "STANDARD";  // default theme
     }
 
     private Stage primaryStage = null;
@@ -233,7 +241,9 @@ public class LcarsApp extends Application {
     private void saveSettings() {
         try (BufferedWriter w = new BufferedWriter(
                 new OutputStreamWriter(new FileOutputStream(SETTINGS_FILE, false), StandardCharsets.UTF_8))) {
-
+        	
+        	w.write("theme=" + SETTINGS.theme);
+        	w.newLine();
             w.write("ambientSound=" + SETTINGS.ambientSound);
             w.newLine();
 
@@ -277,6 +287,10 @@ public class LcarsApp extends Application {
 
                 if (line.startsWith("clickSound="))
                     SETTINGS.clickSound = Boolean.parseBoolean(line.substring(12));
+                
+                if (line.startsWith("theme="))
+                    SETTINGS.theme = line.substring(6);
+
             }
         } catch (Exception ignored) {}
     }
@@ -352,94 +366,156 @@ public class LcarsApp extends Application {
     }
 
     private Parent buildMainConsole(Stage owner) {
-    	    BorderPane root = new BorderPane();
-    	    root.setPadding(new Insets(0, 14, 14, 14));  // top=0, others unchanged
+		BorderPane root = new BorderPane();
+		root.setPadding(new Insets(0));
+		
+		
+
+		// Header with username pill on amber bar
+		VBox bars = buildHeaderBarsWithUserPill();
+		BorderPane titleRow = new BorderPane();
+		headerLogo = new ImageView();
+		headerLogo.setFitWidth(320); headerLogo.setFitHeight(96); headerLogo.setPreserveRatio(true);
+		titleRow.setRight(headerLogo);
+		Region r3 = new Region();
+		r3.setMinHeight(23);
+		r3.setPrefHeight(23);
+		r3.setBackground(new Background(
+			    new BackgroundFill(
+			        LAVENDER,
+			        new CornerRadii(30, 0, 0, 0, false), // TL, TR, BR, BL
+			        Insets.EMPTY
+			    )
+			));
+		root.setTop(new VBox(
+			    bars,         // your clock + amber bar header
+			    spacer(8),    // optional
+			    r3            // THE PURPLE BAR GOES HERE
+			));
 
 
-    	    if (!SETTINGS.transparentUI)
-    	        root.setBackground(new Background(new BackgroundFill(BG, CornerRadii.EMPTY, Insets.EMPTY)));
+		GridPane grid = new GridPane(); grid.setHgap(12); grid.setVgap(12);
+		VBox controls = buildLeftButtonBars();
+		
+		//VBox controls = new VBox(12, sectionLabel("PRIMARY CONTROLS"), grid);
+		
 
-    	    // === ADD LCARS TOP BAR FROM LCARSAPP2 ===
-    	    Node lcarsTopBar = buildLcarsTopBar();
-    	    VBox headerWrapper = new VBox();
-    	    headerWrapper.setSpacing(0);
-    	    headerWrapper.setPadding(Insets.EMPTY);
+		DESKTOP_CANVAS = new DesktopCanvas();
+		Region desktopCard = roundedCard(DESKTOP_CANVAS, PANEL);
+		VBox centerbody = new VBox();
+		desktopCard.setMaxHeight(1200);   // adjusts to your layout height
+		desktopCard.setPrefHeight(1200);
+		desktopCard.setMinHeight(1200);
 
-
-    	    // shift both bars + left column down
-    	    headerWrapper.setPadding(new Insets(32, 0, 0, 0)); 
-
-    	    // Add a duplicate bar ABOVE the existing one
-    	    Node invertedCap = buildInvertedLcarsCap(SALMON);  // new upside-down square
-    	    Node barTop      = buildLcarsTopBar(SALMON);       // top bar
-    	    Node barMain     = buildLcarsTopBar(PEACH);        // main bar
-
-    	    VBox.setMargin(barTop, new Insets(-2, 0, 0, 0));
+		centerbody.getChildren().add(desktopCard);
 
 
-    	    headerWrapper.getChildren().addAll(barTop, barMain);
+		// Top-right: larger holo drive + compact storage bar
+		StackPane desktopStack = new StackPane(centerbody);
+		
 
-    	    root.setTop(headerWrapper);
+		BorderPane body = new BorderPane();
+		controls.setTranslateY(-23);   // adjust the number as needed
+		body.setLeft(controls);
+		body.setCenter(desktopStack);
+		BorderPane.setMargin(desktopStack, new Insets(40, 0, 0, 0));
+		this.mainBody = body;
+		this.desktopContentHolder = desktopStack;
+		this.desktopDefaultContent = centerbody;
+		root.setCenter(body);
 
-    	    headerWrapper.setSpacing(0);
+		Button cmdButton = lcarsButton("Command Prompt", SALMON);
+		Button b2 = lcarsButton("PLACEHOLDER", BLUE);   b2.setDisable(true);
+		Button btnExplorer = lcarsButton("OPEN FOLDER VIEW", TEAL);
+		Button b4 = lcarsButton("PLACEHOLDER", PEACH);  b4.setDisable(true);
 
-    	    // SHIFT EVERYTHING DOWN
-    	    headerWrapper.setPadding(new Insets(32, 0, 0, 0));  // adjust 32px as needed
+		grid.add(cmdButton, 0, 0); grid.add(b2, 1, 0);
+		grid.add(btnExplorer, 0, 1); grid.add(b4, 1, 1);
 
-    	    headerWrapper.getChildren().add(lcarsTopBar);
+		btnExplorer.setOnAction(e -> openExplorerWindow(primaryStage));
+		cmdButton.setOnAction(e -> openCMDPane(primaryStage));
 
-    	    root.setTop(headerWrapper);
+		return root;
+	}
+    private void applyTheme(String themeName) {
 
+        switch (themeName) {
+            case "TNG PEACH" -> {
+                PEACH = Color.web("#FFB266");
+                SALMON = Color.web("#FF8C78");
+                AMBER = Color.web("#FFCC66");
+                BLUE = Color.web("#6699FF");
+                TEAL = Color.web("#60C8C8");
+                LAVENDER = Color.web("#D6D4FF");
+            }
 
+            case "VOYAGER GOLD" -> {
+                PEACH = Color.web("#F5C98A");
+                SALMON = Color.web("#E8936F");
+                AMBER = Color.web("#FFD366");
+                BLUE = Color.web("#88AFFF");
+                TEAL = Color.web("#6DD5C2");
+                LAVENDER = Color.web("#E2D9FF");
+            }
 
-        // Background
-        if (SETTINGS.transparentUI)
-            root.setBackground(Background.EMPTY);
-        else
-            root.setBackground(new Background(new BackgroundFill(BG, CornerRadii.EMPTY, Insets.EMPTY)));
+            case "SOVEREIGN BLUE" -> {
+                PEACH = Color.web("#9EC1FF");
+                SALMON = Color.web("#5CA7FF");
+                AMBER = Color.web("#C8E0FF");
+                BLUE = Color.web("#3E7BFF");
+                TEAL = Color.web("#5FE3E3");
+                LAVENDER = Color.web("#DCE6FF");
+            }
 
-        // ----------------------------------------
-        // LEFT COLUMN: ONLY THE 4 LCARS SQUARE BUTTONS
-        // ----------------------------------------
-        VBox leftColumn = buildLeftButtonBars();   // << ONLY your 4 blocks, nothing else
-        leftColumn.setPadding(new Insets(0, 0, 20, 0));  // remove top padding
+            case "ALTERNATE DARK" -> {
+                PEACH = Color.web("#C47E48");
+                SALMON = Color.web("#B46652");
+                AMBER = Color.web("#C9A24A");
+                BLUE = Color.web("#4A69C9");
+                TEAL = Color.web("#52B4A3");
+                LAVENDER = Color.web("#9A93B4");
+            }
+        }
 
+        SETTINGS.theme = themeName;
+        saveSettings();
 
-        BorderPane.setMargin(leftColumn, new Insets(0, 20, 0, 0));
-
-        // ----------------------------------------
-        // RIGHT SIDE: HOLO + DESKTOP CANVAS
-        // ----------------------------------------
-        DESKTOP_CANVAS = new DesktopCanvas();
-
-        Node holo = buildHoloDriveWithStorage();
-        VBox desktopColumn = new VBox(12, holo, DESKTOP_CANVAS);
-        desktopColumn.setAlignment(Pos.TOP_CENTER);
-        desktopColumn.setPadding(new Insets(12));
-
-        StackPane desktopCard = new StackPane(desktopColumn);
-        desktopCard.setBackground(new Background(
-                new BackgroundFill(PANEL, new CornerRadii(24), Insets.EMPTY)
-        ));
-        desktopCard.setBorder(new Border(new BorderStroke(
-                EDGE, BorderStrokeStyle.SOLID, new CornerRadii(24), new BorderWidths(1)
-        )));
-
-        desktopContentHolder = new StackPane(desktopCard);
-        desktopDefaultContent = desktopCard;
-
-        // ----------------------------------------
-        // NO HEADER. NO PRIMARY CONTROLS. ONLY LEFT BUTTONS.
-        // ----------------------------------------
-
-        root.setLeft(leftColumn);
-     // Pull the left column UP so the top bar overlaps it
-        BorderPane.setMargin(leftColumn, new Insets(-32, 0, 0, 0));
-
-        root.setCenter(desktopContentHolder);
-
-        return root;
+        recolorUI(primaryStage.getScene().getRoot());
     }
+
+
+    private void recolorUI(Node n) {
+
+        if (n instanceof Button b) {
+            Color c = (Color) b.getUserData();       // stored the original color in userData
+            b.setBackground(new Background(
+                new BackgroundFill(c, new CornerRadii(999), Insets.EMPTY)));
+            if (SETTINGS.glowEnabled)
+                b.setEffect(createGlow(c));
+        }
+
+        if (n instanceof Label lbl) {
+            if (lbl.getTextFill().equals(AMBER) ||
+                lbl.getTextFill().equals(SALMON) ||
+                lbl.getTextFill().equals(PEACH))
+                lbl.setTextFill(AMBER);   // or specific logic per label type
+        }
+
+        if (n instanceof Rectangle r) {
+            // Repaint rectangles that use theme colors
+            // You may want custom logic per left button
+        }
+
+        if (n instanceof SVGPath svg) {
+            svg.setFill(PEACH); // or whichever color applies
+        }
+
+        if (n instanceof Parent p) {
+            for (Node child : p.getChildrenUnmodifiable())
+                recolorUI(child);
+        }
+    }
+
     private Node buildLcarsTopBar(Color color) {
         HBox bar = new HBox();
         bar.setPadding(Insets.EMPTY);
@@ -490,6 +566,54 @@ public class LcarsApp extends Application {
         )));
 
         return block;
+    }
+    private Node buildLcarsTopCap(Color color) {
+        Region cap = new Region();
+        cap.setPrefSize(200, 26);
+        cap.setBackground(new Background(
+            new BackgroundFill(color,
+                    new CornerRadii(0, 0, 26, 26, false),
+                    Insets.EMPTY)
+        ));
+        cap.setBorder(new Border(new BorderStroke(
+            EDGE, BorderStrokeStyle.SOLID,
+            new CornerRadii(0, 0, 26, 26, false),
+            new BorderWidths(2)
+        )));
+
+        return cap;
+    }
+    private Region buildLcarsGap() {
+        Region gap = new Region();
+        gap.setPrefHeight(6);   // tune between 4–8px
+        gap.setBackground(new Background(new BackgroundFill(BG, CornerRadii.EMPTY, Insets.EMPTY)));
+        return gap;
+    }
+    private Node buildLcarsMainBar(Color color) {
+        HBox bar = new HBox();
+
+        Region left = new Region();
+        left.setPrefSize(170, 34);
+        left.setBackground(new Background(
+            new BackgroundFill(color,
+                    new CornerRadii(34, 0, 0, 34, false),
+                    Insets.EMPTY)
+        ));
+        left.setBorder(new Border(new BorderStroke(
+            EDGE, BorderStrokeStyle.SOLID,
+            new CornerRadii(34, 0, 0, 34, false),
+            new BorderWidths(2)
+        )));
+
+        Region stretch = new Region();
+        stretch.setPrefHeight(34);
+        stretch.setBackground(new Background(
+            new BackgroundFill(color, CornerRadii.EMPTY, Insets.EMPTY)
+        ));
+        HBox.setHgrow(stretch, Priority.ALWAYS);
+
+        bar.getChildren().addAll(left, stretch);
+        return bar;
     }
 
     private Node buildLcarsTopBar() {
@@ -612,7 +736,7 @@ public class LcarsApp extends Application {
         // Top curve from LcarsApp2
         SVGPath curve = new SVGPath();
         curve.setContent("M0 0 200 0 200-82C200-100 220-100 220-100L220-123 50-123C23-123 0-120 0-90Z");
-        curve.setFill(PEACH);
+        curve.setFill(LAVENDER);
         leftBarButtons.setPadding(new Insets(0, 0, 0, 0));
         // Four LCARS rectangular blocks
         leftBarButtons.getChildren().addAll(
@@ -620,9 +744,12 @@ public class LcarsApp extends Application {
                 createLcarsSquare("FILE EXPLORER", PEACH, () -> openExplorerWindow(primaryStage)),
                 createLcarsSquare("COMMAND PROMPT", AMBER, () -> openCMDPane(primaryStage)),
                 createLcarsSquare("SETTINGS", SALMON, () -> openSettingsWindow(primaryStage)),
-                createLcarsSquare("COMM ARRAY", BLUE, this::openCommArrayPane)
+                createLcarsSquare("COMM ARRAY", BLUE, this::openCommArrayPane),
+                createLcarsSquare("PLACEHOLDER", PEACH, this ::openCommArrayPane)
         );
-
+        // ⭐ Add the system monitor at the bottom
+        VBox monitor = buildSystemMonitor();
+        leftBarButtons.getChildren().add(monitor);
         return leftBarButtons;
     }
     private StackPane createLcarsSquare(String label, Color color, Runnable action) {
@@ -1102,50 +1229,81 @@ public class LcarsApp extends Application {
 
     // === HEADER: small username box sitting ON the amber bar at the right end ===
     private VBox buildHeaderBarsWithUserPill() {
-        double barH1 = 34, barH2 = 20, barH3 = 12;
+		double barh1 = 90, barH2 = 20;
 
-        // === Bars ===
-        Region r1 = new Region();
-        r1.setMinHeight(barH1);
-        r1.setPrefHeight(barH1);
-        r1.setBackground(new Background(new BackgroundFill(SALMON, new CornerRadii(barH1), Insets.EMPTY)));
+		// === Time Clock ===
+		StackPane r1 = new StackPane();
+		r1.setMinHeight(barh1);
+		r1.setPrefHeight(barh1);
+		Label timeClockLabel = new Label();
+		timeClockLabel.setTextFill(Color.web("#f89d00"));
+	    timeClockLabel.setFont(lcarsFontOrDefault(78, true)); // add label to the top bar
+	    StackPane.setAlignment(timeClockLabel, Pos.CENTER_LEFT);
+		
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+		clock = new Timeline(
+				new KeyFrame(Duration.ZERO, e -> {
+					String Time = LocalTime.now().format(formatter);
+					timeClockLabel.setText(Time);
+				}),new KeyFrame(Duration.seconds(1))
+				);
 
-        StackPane amberRow = new StackPane();
-        Region r2 = new Region();
-        r2.setMinHeight(barH2);
-        r2.setPrefHeight(barH2);
-        r2.setBackground(new Background(new BackgroundFill(AMBER, new CornerRadii(barH2), Insets.EMPTY)));
-        amberRow.getChildren().add(r2);
+		clock.setCycleCount(Animation.INDEFINITE);
+		clock.play();
+		
+		//===curve Button==
+		SVGPath curve = new SVGPath();
+	    curve.setContent("M 0 0 L 200 0 L 200 82 C 200 100 220 100 235 100 L 235 123 L 50 123 C 23 123 0 120 0 90 Z"); 
+	    curve.setFill(AMBER); 
+	    curve.setPickOnBounds(true);
+	    
+	    curve.setOnMouseClicked(e -> {
+		    System.out.println("Rectangle button clicked!");
+		});
 
-        // === Username box ===
-        String username = System.getProperty("user.name", "USER").toUpperCase(Locale.ROOT);
-        HBox box = new HBox();
-        box.setPadding(new Insets(2, 8, 2, 8));
-        box.setBackground(new Background(new BackgroundFill(PANEL, CornerRadii.EMPTY, Insets.EMPTY)));
-        box.setBorder(
-                new Border(new BorderStroke(EDGE, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(1))));
-        box.setMouseTransparent(true);
+	    
+	    HBox leftBox = new HBox(16); // spacing 8px
+	    leftBox.getChildren().addAll(curve, timeClockLabel);
+	    leftBox.setAlignment(Pos.TOP_LEFT);
+	    HBox.setMargin(timeClockLabel, new Insets(0, 0, 0, 4)); // small gap if needed
 
-        // prevent stretching
-        box.setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
-        box.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+	    r1.getChildren().add(leftBox);
+	    StackPane.setAlignment(leftBox, Pos.TOP_LEFT);
 
-        Label nameLabel = new Label(username);
-        nameLabel.setTextFill(AMBER.brighter());
-        nameLabel.setFont(lcarsFontOrDefault(12, true));
-        box.getChildren().add(nameLabel);
 
-        amberRow.getChildren().add(box);
-        StackPane.setAlignment(box, Pos.CENTER_RIGHT);
-        StackPane.setMargin(box, new Insets(0, 18, 0, 0));
+		// === Bars ===
+		StackPane amberRow = new StackPane();
+		Region r2 = new Region();
+		r2.setMinHeight(barH2);
+		r2.setPrefHeight(barH2);
+		r2.setBackground(new Background(new BackgroundFill(AMBER, null, null)));
+		amberRow.setMargin(r2,new Insets(0,0,0,100));
+		amberRow.getChildren().add(r2);
+		
+		// === Username box ===
+		String username = System.getProperty("user.name", "USER").toUpperCase(Locale.ROOT);
+		HBox box = new HBox(8);
+		box.setPadding(new Insets(2, 8, 2, 8));
+		box.setBackground(new Background(new BackgroundFill(PANEL, CornerRadii.EMPTY, Insets.EMPTY)));
+		box.setBorder(new Border(new BorderStroke(EDGE, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(1))));
+		box.setMouseTransparent(true);
 
-        Region r3 = new Region();
-        r3.setMinHeight(barH3);
-        r3.setPrefHeight(barH3);
-        r3.setBackground(new Background(new BackgroundFill(BLUE, new CornerRadii(barH3), Insets.EMPTY)));
+		// prevent stretching
+		box.setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+		box.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
 
-        return new VBox(6, r1, amberRow, r3);
-    }
+		Label nameLabel = new Label(username);
+		nameLabel.setTextFill(AMBER.brighter());
+		nameLabel.setFont(lcarsFontOrDefault(12, true));
+		box.getChildren().add(nameLabel);
+
+		amberRow.getChildren().add(box);
+		StackPane.setAlignment(box, Pos.CENTER_RIGHT);
+		StackPane.setMargin(box, new Insets(0, 18, 0, 0));
+
+
+		return new VBox(10, r1, amberRow);
+	}
 
     // === HOLOGRAPHIC HARD-DRIVE (bigger hub) + compact storage bar + drive name ===
     private Node buildHoloDriveWithStorage() {
@@ -1396,6 +1554,27 @@ public class LcarsApp extends Application {
             if (SETTINGS.ambientSound) playBackgroundSounds();
             else if (bgm != null) bgm.stop();
         });
+        
+        Label themeLabel = new Label("Theme Color");
+        themeLabel.setFont(lcarsFontOrDefault(14, true));
+        themeLabel.setTextFill(AMBER);
+
+        ComboBox<String> themeSelector = new ComboBox<>();
+        themeSelector.getItems().addAll(
+                "TNG PEACH",
+                "VOYAGER GOLD",
+                "SOVEREIGN BLUE",
+                "ALTERNATE DARK"
+        );
+
+        themeSelector.setValue(SETTINGS.theme);
+        themeSelector.setPrefWidth(240);
+
+        Button applyThemeBtn = lcarsButton("APPLY THEME", TEAL);
+
+        applyThemeBtn.setOnAction(e -> applyTheme(themeSelector.getValue()));
+
+
 
         clickToggle.setOnAction(e -> {
             SETTINGS.clickSound = clickToggle.isSelected();
@@ -1441,9 +1620,19 @@ public class LcarsApp extends Application {
         close.setOnAction(e -> returnToDesktop());
 
         root.getChildren().addAll(
-                title, soundToggle, clickToggle, glowToggle,
-                fontToggle, scaleLabel, scaleRow, spacer(12), close
-        );
+        	    title,
+        	    soundToggle,
+        	    clickToggle,
+        	    glowToggle,
+        	    fontToggle,
+        	    themeLabel,
+        	    themeSelector,
+        	    applyThemeBtn,
+        	    scaleLabel,
+        	    scaleRow,
+        	    spacer(12),
+        	    close
+        	);
 
         showInDesktopPane(root);
     }
