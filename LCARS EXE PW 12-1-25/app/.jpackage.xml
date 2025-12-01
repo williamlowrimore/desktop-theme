@@ -1,0 +1,5 @@
+<?xml version="1.0" ?>
+<jpackage-state version="25.0.1" platform="windows">
+  <app-version>1.0</app-version>
+  <main-launcher>LCARS</main-launcher>
+  <main-class>main.LcarsApp</main-class></jpackage-state>
