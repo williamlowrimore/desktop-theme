@@ -1,0 +1,7 @@
+jpackage ^
+  --type app-image ^
+  --name LCARS ^
+  --input . ^
+  --main-jar LCARS.jar ^
+  --main-class main.LcarsApp ^
+  --runtime-image lcars_runtime
